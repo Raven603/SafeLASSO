@@ -38,7 +38,7 @@ def sequential_strong(X, y, *, this_alpha, last_alpha, last_w):
 # Onetime Strong rules
 def onetime_strong(X, y, *, this_alpha, **params):
     alpha0 = params.get("alpha0",
-                        np.max(np.abs(X.T @ y)))
+                        np.max(np.abs(X.T @ y)) * X.shape[0])
     w0 = params.get("w0",
                     sp.sparse.csr_matrix(np.zeros((X.shape[1], 1))))
     return sequential_strong(X, y,
@@ -63,13 +63,13 @@ def strong_lasso(clf, X, y, strong_type="sequential", **params):
                                   w0=params.get("w0"))
 
     is_active = select(X, y)
+    num_iter = 0
 
     if is_active.any():
         clf.fit(X[:, is_active], y)
-        num_iter = clf.n_iter_
+        num_iter += clf.n_iter_
 
     is_incorrect = check_kkt(X, y, this_alpha, is_active)
-    num_iter = 0
 
     while np.any(is_incorrect):
         is_active = np.logical_or(is_active, is_incorrect)
@@ -100,7 +100,10 @@ if __name__ == "__main__":
     alphas = np.logspace(-1.05, -2.5, num=200)
 
     X, y, *_ = data
-    X = skp.normalize(X)
+    X, y, _, _, _ = skl.base._preprocess_data(
+        X, y,
+        fit_intercept=True,
+        normalize=True)
     y = y.reshape((-1, 1))
 
     alpha0 = alphas[0]
