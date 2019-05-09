@@ -8,6 +8,13 @@ import sklearn.preprocessing as skp
 import sklearn.datasets as skd
 
 
+def timeit(subr):
+    start = time.process_time()
+    result = subr()
+    end = time.process_time()
+    return (result, end - start)
+
+
 # SDPP
 def sdpp(X, y, *, this_alpha, last_alpha, last_w):
     this_lamb = X.shape[0] * this_alpha
